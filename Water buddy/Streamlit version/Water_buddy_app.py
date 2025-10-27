@@ -90,7 +90,31 @@ div[data-testid="stMetricValue"] {{
 }}
 </style>
 """, unsafe_allow_html=True)
+##Water intake charge
 
+def update_hydration_logs(state, amount):
+    """Update daily and monthly logs whenever water is logged."""
+    now = datetime.datetime.now()
+    date_str = now.strftime("%Y-%m-%d")     # e.g. 2025-10-25
+    month_str = now.strftime("%Y-%m")       # e.g. 2025-10
+
+    # Ensure keys exist
+    if "daily_log" not in state:
+        state["daily_log"] = {}
+    if "monthly_log" not in state:
+        state["monthly_log"] = {}
+
+    # Update daily total
+    state["daily_log"][date_str] = state["daily_log"].get(date_str, 0) + amount
+
+    # Update monthly total
+    state["monthly_log"][month_str] = state["monthly_log"].get(month_str, 0) + amount
+
+    # Also ensure hourly_log exists
+    if "hourly_log" not in state:
+        state["hourly_log"] = {}
+    current_hour = str(now.hour)
+    state["hourly_log"][current_hour] = state["hourly_log"].get(current_hour, 0) + amount
 # ---------------- USER MANAGEMENT ----------------
 if "user" not in st.session_state:
     st.session_state.user = None
@@ -296,8 +320,12 @@ else:
         col2.button("+250 ml", on_click=add_water,args=(250,))
         col3.button("+500 ml", on_click=add_water,args=(500,))
         amount = st.number_input("Manual Entry (ml)",50,2000,250,50)
-        if st.button("Add Water Intake"):
-            add_water(amount)
+        if st.button("Add Water"):
+            state["current_intake"] += add_ml
+            update_hydration_logs(state, add_ml)
+            save_state(state)  # keep your existing save function if you have one
+            st.success(f"Added {add_ml} ml of water!")
+
         st.metric("Total Intake", f"{state['total_ml']} ml")
         display_progress_bar(state['total_ml'], state['goal_ml'])
         if st.button("🔄 Reset Today's Intake"):
@@ -331,8 +359,7 @@ else:
             st.write(f"Email: {creds.id_token.get('email')}")
         else:
             if st.button("Sign in with Google"):
-                ##google_sign_in()
-                st.write('This is a feature which will be added in a future update!')
+                google_sign_in()
 
     elif page=="💡 Tips":
         st.header("💡 Smart Hydration Tips")
@@ -356,4 +383,3 @@ else:
     handle_notifications(state)
 
     st.markdown('<div class="footer">Made with ❤️ by WaterBuddy | A healthy habit, simplified.</div>', unsafe_allow_html=True)
-
