@@ -1,9 +1,10 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import os, json, pickle
+import os, json, pickle, time
 from datetime import date, datetime
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
+from streamlit.components.v1 import html
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="💧 WaterBuddy", layout="centered")
@@ -28,14 +29,14 @@ themes = {
         "button_hover": "#3399ff"
     },
     "Dark": {
-        "bg": "#000000",
-        "sidebar": "#cf5d21",
+        "bg": "#0c0c0c",
+        "sidebar": "#1a1a1a",
         "text": "#ffffff",
         "primary": "#6ca8ff",
-        "accent": "#3399ff",
+        "accent": "#2e6fe3",
         "metric": "#8dc6ff",
-        "button_bg": "#6ca8ff",
-        "button_hover": "#3399ff"
+        "button_bg": "#3c7cff",
+        "button_hover": "#5a96ff"
     }
 }
 colors = themes[theme]
@@ -102,15 +103,19 @@ def load_user_data(username):
     if os.path.exists(filename):
         with open(filename, "r") as f:
             return json.load(f)
-    return {"total_ml": 0, "goal_ml": 2200, "hourly_log": {}, "date": date.today().isoformat(),
-            "name": username, "age":0, "occupation":"", "password":"","google_signed_in":False}
+    return {
+        "total_ml": 0, "goal_ml": 2200, "hourly_log": {},
+        "date": date.today().isoformat(), "name": username,
+        "age": 0, "occupation": "", "password": "",
+        "google_signed_in": False, "reminders_per_hour": 0
+    }
 
 def save_user_data(username, data):
     with open(f"{username}_history.json","w") as f:
         json.dump(data, f, indent=2)
 
 # ---------------- GOOGLE SIGN-IN ----------------
-CLIENT_SECRETS_FILE = r"C:\Users\Jeyaditya\AppData\Local\Programs\Python\Python313\Python folder\Bheema mam\Water buddy\client_secrets.json"
+CLIENT_SECRETS_FILE = "client_secrets.json"
 SCOPES = ["https://www.googleapis.com/auth/userinfo.profile",
           "https://www.googleapis.com/auth/userinfo.email",
           "openid"]
@@ -137,6 +142,41 @@ def google_sign_in():
     except Exception as e:
         st.error("⚠️ Please provide a valid client_secrets.json file path.")
         st.write(e)
+
+# ---------------- NOTIFICATIONS ----------------
+def show_browser_notification(title, message):
+    js_code = f"""
+    <script>
+    if (Notification.permission === "granted") {{
+        new Notification("{title}", {{
+            body: "{message}",
+            icon: "https://cdn-icons-png.flaticon.com/512/869/869869.png"
+        }});
+    }} else if (Notification.permission !== "denied") {{
+        Notification.requestPermission().then(function(permission) {{
+            if (permission === "granted") {{
+                new Notification("{title}", {{
+                    body: "{message}",
+                    icon: "https://cdn-icons-png.flaticon.com/512/869/869869.png"
+                }});
+            }}
+        }});
+    }}
+    </script>
+    """
+    html(js_code)
+
+def handle_notifications(state):
+    reminders = state.get("reminders_per_hour", 0)
+    if reminders == 0:
+        return
+    current_minute = int(time.strftime("%M"))
+    interval = 60 // reminders
+    if current_minute % interval == 0:
+        show_browser_notification(
+            "💧 Time to drink water!",
+            f"Stay hydrated — your WaterBuddy reminder ({reminders}x/hour)."
+        )
 
 # ---------------- LOGIN SCREEN ----------------
 def login_screen():
@@ -170,7 +210,8 @@ def login_screen():
 
     st.markdown("OR")
     if st.button("Sign in with Google"):
-        google_sign_in()
+        st.write("This is a feature that will be added in a future update")
+        #google_sign_in()
 
 # ---------------- PROGRESS BAR ----------------
 def display_progress_bar(total, goal):
@@ -237,6 +278,17 @@ else:
         st.markdown("---")
         st.button(f"Switch to {'🌙 Dark' if theme=='Light' else '☀️ Light'} Mode", on_click=switch_theme)
 
+        # 🔔 Notification Settings
+        st.subheader("🔔 Notification Settings")
+        notification_choice = st.selectbox(
+            "Reminder frequency",
+            ("None", "Once per hour", "Twice per hour", "Thrice per hour"),
+            index=state.get("reminders_per_hour", 0)
+        )
+        reminder_mapping = {"None": 0, "Once per hour": 1, "Twice per hour": 2, "Thrice per hour": 3}
+        state["reminders_per_hour"] = reminder_mapping[notification_choice]
+        save_user_data(username, state)
+
     if page=="🏠 Home":
         st.header("💧 Stay Hydrated")
         col1,col2,col3 = st.columns(3)
@@ -248,7 +300,6 @@ else:
             add_water(amount)
         st.metric("Total Intake", f"{state['total_ml']} ml")
         display_progress_bar(state['total_ml'], state['goal_ml'])
-        # ---- Reset Button under Total Intake ----
         if st.button("🔄 Reset Today's Intake"):
             reset_day()
 
@@ -284,14 +335,14 @@ else:
 
     elif page=="💡 Tips":
         st.header("💡 Smart Hydration Tips")
-        tips = [
+        for tip in [
             "Drink a glass of water after waking up.",
             "Carry a reusable bottle.",
             "Flavor water with fruit.",
             "Set reminders throughout the day.",
             "Hydrate before/after exercise."
-        ]
-        for tip in tips: st.write(f"- {tip}")
+        ]:
+            st.write(f"- {tip}")
 
     elif page=="👤 Profile":
         st.header("👤 Profile Details")
@@ -301,5 +352,6 @@ else:
         st.write(f"Daily Goal: {state.get('goal_ml',0)} ml")
         st.write(f"Google Signed In: {'✅' if state.get('google_signed_in',False) else '❌'}")
 
-    # Footer
+    handle_notifications(state)
+
     st.markdown('<div class="footer">Made with ❤️ by WaterBuddy | A healthy habit, simplified.</div>', unsafe_allow_html=True)
