@@ -331,7 +331,8 @@ else:
             st.write(f"Email: {creds.id_token.get('email')}")
         else:
             if st.button("Sign in with Google"):
-                google_sign_in()
+                ##google_sign_in()
+                st.write('This is a feature which will be added in a future update!')
 
     elif page=="💡 Tips":
         st.header("💡 Smart Hydration Tips")
@@ -355,3 +356,4 @@ else:
     handle_notifications(state)
 
     st.markdown('<div class="footer">Made with ❤️ by WaterBuddy | A healthy habit, simplified.</div>', unsafe_allow_html=True)
+
