@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import matplotlib.pyplot as plt
 import os, json, pickle, time
@@ -534,4 +533,5 @@ else:
     handle_notifications(state)
 
     st.markdown('<div class="footer">Made with ❤️ by WaterBuddy | A healthy habit, simplified.</div>', unsafe_allow_html=True)
+
 
