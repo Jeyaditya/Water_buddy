@@ -11,7 +11,7 @@ This README explains what the app does,why each feature exists, and how everythi
 WaterBuddy is your daily hydration companion.
 It motivates you, tracks your water intake, teaches you good habits, shows progress visually, and even cheers for you when you reach your goal.
 
-Our cute sea-turtle mascot appears on every page, reacting to your progress:
+ A cute sea-turtle mascot appears on every page, reacting to your progress:
 
 * Below 25% → sad turtle
 * 25–75% → calm turtle
@@ -53,8 +53,6 @@ You can still update your age anytime — the app auto-adjusts your goal.
 
 
 ## ✔ **3. Voice Assistant (6 Languages!)**
-
-WaterBuddy speaks to you using your browser’s speech engine.
 
 Supported languages:
 
@@ -112,7 +110,7 @@ Images used:
 * images/25.png
 * images/50.png
 * images/100.png
-
+The images are named on par with the percentage in which they will be enabled.
 These are converted into base64 and embedded directly, so they load perfectly on Streamlit Cloud. Meaning there is no chance that the URL gets broken.
 
 
@@ -209,7 +207,7 @@ This ensures the mascot works on:
 
 # **How to Run Locally**
 
-1. Install dependencies:
+1. Install dependencies (Inside the requirements.txt):
 
 ```
 pip install streamlit matplotlib
@@ -226,10 +224,10 @@ waterbuddy/
   │   ├─ 100.png
   ├─ waterbuddy_final_v2.py
 
-3. Run (In windows power shell):
+3. Run (In windows power shell) aka Command prompt:
 
 
-streamlit run waterbuddy_final_v2.py
+streamlit run Water_buddy.py
 
 
 
@@ -246,4 +244,4 @@ This is a full personality-based health companion:
 * Shows confetti
 * Lives on every page
 
-I have built something that makes you think it is alive!
+I have built something that makes you want to drink water for a waiting someone else (mascot)!
