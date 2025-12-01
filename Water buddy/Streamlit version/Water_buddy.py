@@ -1,4 +1,3 @@
-# waterbuddy_final_v2.py
 import streamlit as st
 import matplotlib.pyplot as plt
 import os, json, time, random, base64
@@ -7,18 +6,15 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="💧 WaterBuddy", layout="centered")
 
-# ---------------- Session defaults ----------------
 if "theme" not in st.session_state:
     st.session_state.theme = "Light"
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# safe rerun flag helper
+
 def safe_rerun():
     st.session_state["_trigger_rerun"] = True
 
-# at end of script we'll call st.rerun() if requested
-# ---------------- Theme ----------------
 def switch_theme():
     st.session_state.theme = "Dark" if st.session_state.theme=="Light" else "Light"
 
@@ -29,7 +25,6 @@ themes = {
 }
 colors = themes[theme]
 
-# ---------------- Global CSS ----------------
 st.markdown(f"""
 <style>
 /* base colors */
@@ -56,7 +51,6 @@ div.stButton > button:hover {{ background-color:{colors['button_hover']} !import
     100% {{ box-shadow:0 0 6px 1px rgba(0,150,255,0.12); }}
 }}
 
-/* Right persistent mascot (large ~300px) */
 .mascot-sidebar {{
     position: fixed;
     right: 18px;
@@ -68,9 +62,8 @@ div.stButton > button:hover {{ background-color:{colors['button_hover']} !import
     background: rgba(255,255,255,0.02);
     border-radius: 16px;
     padding: 12px;
-    pointer-events: none; /* don't block page clicks */
+    pointer-events: none;
 }}
-/* default dark bubble */
 .mascot-bubble {{
     background: rgba(0,0,0,0.75);
     color: white;
@@ -83,7 +76,6 @@ div.stButton > button:hover {{ background-color:{colors['button_hover']} !import
     box-shadow:0 6px 18px rgba(0,0,0,0.18);
     pointer-events: auto;
 }}
-/* light bubble variant for light theme */
 .mascot-bubble.light {{
     background: rgba(255,255,255,0.95);
     color: #222;
@@ -109,7 +101,6 @@ div.stButton > button:hover {{ background-color:{colors['button_hover']} !import
   .mascot-bubble {{ max-width:200px; font-size:0.9rem; }}
 }}
 
-/* Light-theme form controls override to ensure readability */
 input, textarea, select {{
     background: {'#ffffff' if theme=='Light' else 'transparent'} !important;
     color: {'#222' if theme=='Light' else 'inherit'} !important;
@@ -121,7 +112,6 @@ input, textarea, select {{
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- Data helpers ----------------
 def load_user_data(username):
     fn = f"{username}_history.json"
     if os.path.exists(fn):
@@ -129,7 +119,6 @@ def load_user_data(username):
             with open(fn,"r") as f:
                 return json.load(f)
         except: pass
-    # include default voice fields
     return {"total_ml":0,"goal_ml":2200,"hourly_log":{},"daily_log":{},"monthly_log":{},
             "date":date.today().isoformat(),"name":username,"password":"","age":20,"career":"",
             "health_conditions":[],"reminders_per_hour":0,"xp":0,"level":1,"last_update_iso":None,
@@ -172,8 +161,6 @@ def auto_day_rollover(state,username):
         state["hourly_log"]={}
         state["date"]=today_str
         save_user_data(username,state)
-
-# ---------------- Series helpers ----------------
 def compute_weekly_series(state):
     today=date.today()
     labels, series=[],[]
@@ -193,9 +180,7 @@ def compute_monthly_series(state):
         series.append(state.get("monthly_log",{}).get(key,0))
     return labels, series
 
-# ---------------- Voice helper (multilingual, emotion-aware) ----------------
 def speak(text, mood="neutral", lang="en"):
-    # map to broad language codes; browser may select best available voice
     lang_map = {"en":"en-US","hi":"hi-IN","ta":"ta-IN","es":"es-ES","fr":"fr-FR","ja":"ja-JP"}
     name_map = {"en":"English","hi":"Hindi","ta":"Tamil","es":"Spanish","fr":"French","ja":"Japanese"}
     voice_lang = lang_map.get(lang, "en-US")
@@ -227,7 +212,6 @@ def speak(text, mood="neutral", lang="en"):
     </script>
     """, height=0)
 
-# ---------------- Mascot (persistent right-side, uses base64 embed for reliability) ----------------
 MOTIVATIONAL_TIPS = [
     "Tip: Drink a glass of water before each meal.",
     "Keep a water bottle on your desk for easy sips.",
@@ -290,8 +274,6 @@ def render_mascot(state, lang="en"):
         except:
             pass
         state["last_spoken_pct"] = pct
-
-    # choose bubble variant for Light vs Dark
     bubble_variant_class = "light" if st.session_state.get("theme","Light")=="Light" else ""
     bubble_class = f"mascot-bubble {bubble_variant_class} bounce" if confetti else f"mascot-bubble {bubble_variant_class}"
     img_anim_class = "mascot-img wiggle" if (75 <= pct < 100) else "mascot-img"
@@ -330,8 +312,6 @@ def render_mascot(state, lang="en"):
         })();
         </script>
         """, height=0)
-
-# ---------------- Progress bar ----------------
 def display_progress_bar(total,goal):
     progress_percent=percent(total,goal)
     progress_value=min(progress_percent/100,1.0)
@@ -348,7 +328,6 @@ def display_progress_bar(total,goal):
     </div>
     """,unsafe_allow_html=True)
 
-# ---------------- Notifications / Reminders ----------------
 def handle_notifications(state):
     try:
         rem=int(state.get("reminders_per_hour",0))
@@ -368,14 +347,12 @@ def handle_notifications(state):
             components.html(js,height=0)
     except: pass
 
-# ---------------- Login ----------------
 def login_screen():
     st.title("💧 Welcome to WaterBuddy")
     choice = st.radio("Login / Signup / Guest", ["Login","Signup","Guest"])
     username = st.text_input("Username", key="login_username")
     password = st.text_input("Password", type="password", key="login_password")
 
-    # added: age and career inputs on the login/signup screen so profile is set before Home
     age_input = st.number_input("Age",4,100,value=20, key="login_age")
     career_input = st.text_input("Career/Occupation", value="", key="login_career")
 
@@ -427,8 +404,7 @@ def login_screen():
         save_user_data(guestname, data)
         st.session_state.user=guestname
         safe_rerun()
-
-# ---------------- Age-based helper ----------------
+        
 def set_goal_by_age(state):
     age=state.get("age",20)
     if 4<=age<=8: goal=1200
@@ -438,7 +414,6 @@ def set_goal_by_age(state):
     state["goal_ml"]=goal
     save_user_data(st.session_state.user,state)
 
-# ---------------- MAIN APP ----------------
 if st.session_state.user is None:
     login_screen()
 else:
@@ -446,19 +421,16 @@ else:
     state = load_user_data(username)
     auto_day_rollover(state,username)
 
-    # ---------------- Sidebar ----------------
     with st.sidebar:
         st.image("https://cdn-icons-png.flaticon.com/512/2966/2966486.png", width=90)
         st.title(f"WaterBuddy 💧 ({username})")
 
         page = st.radio("Navigation", ["🏠 Home","📈 Charts","🔔 Reminders","⚙️ Settings","💡 Tips","👤 Profile"], index=0)
         st.markdown("---")
-        # keep only metric in sidebar to avoid duplicate progress bars
         st.metric("Today's Progress",f"{percent(state.get('total_ml',0),state.get('goal_ml',2200))}%",f"{state.get('total_ml',0)}/{state.get('goal_ml',2200)} ml")
         st.markdown("---")
         st.button(f"Switch to {'🌙 Dark' if st.session_state.get('theme','Light')=='Light' else '☀️ Light'} Mode",on_click=switch_theme)
         st.markdown("---")
-        # language select: show full names but keep codes internally
         display_names = ["English","Hindi","Tamil","Spanish","French","Japanese"]
         codes = ["en","hi","ta","es","fr","ja"]
         cur_code = state.get("voice_lang","en")
@@ -480,7 +452,6 @@ else:
 
     set_goal_by_age(state)
 
-    # ---------------- Pages ----------------
     if page=="🏠 Home":
         st.header("💧 Stay Hydrated")
         c1,c2,c3 = st.columns(3)
@@ -506,7 +477,6 @@ else:
         c2.button("+250 ml", on_click=add_water,args=(250,), key="b250")
         c3.button("+500 ml", on_click=add_water,args=(500,), key="b500")
 
-        # manual entry with distinct keys to avoid Enter double-trigger
         manual_key = "manual_intake_"+username
         a = st.number_input("Manual Entry (ml)",50,2000,250,50, key=manual_key)
         add_trigger = st.button("Add Water", key="add_btn_"+username)
@@ -514,7 +484,6 @@ else:
             add_water(a)
 
         st.metric("Total Intake",f"{state['total_ml']} ml")
-        # single progress bar displayed in Home (only here)
         display_progress_bar(state['total_ml'],state['goal_ml'])
         if st.button("🔄 Reset Today's Intake", key="reset_btn"):
             state["total_ml"]=0
@@ -609,14 +578,11 @@ else:
         st.write(f"Today's Intake: {state.get('total_ml',0)} ml")
         st.write("💡 Keep going! Every sip counts!")
 
-    # ---------------- persistent mascot (render once per page) ----------------
     render_mascot(state, lang=state.get("voice_lang","en"))
 
-    # handle notifications and save
     handle_notifications(state)
     save_user_data(username,state)
 
-# final safe rerun handler - executes after UI built if flagged
 if st.session_state.get("_trigger_rerun", False):
     st.session_state["_trigger_rerun"] = False
     st.rerun()
