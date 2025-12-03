@@ -245,3 +245,9 @@ This is a full personality-based health companion:
 * Lives on every page
 
 I have built something that makes you want to drink water for a waiting someone else (mascot)!
+# **Credits**
+
+Created By: Jeyaditya A
+Class: Artificial Intelligence python programming Year 1
+Mentor: Syed Ali Beema
+School Name: Jain Vidyalaya
