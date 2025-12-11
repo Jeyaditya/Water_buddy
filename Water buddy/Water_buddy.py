@@ -498,7 +498,7 @@ else:
         save_user_data(username, state)
         if st.button("Logout"):
             st.session_state.user = None
-            st.experimental_rerun()
+            safe_rerun()
     set_goal_by_age(state)
 
     if page == "🏠 Home":
@@ -650,3 +650,4 @@ else:
 if st.session_state.get("_trigger_rerun", False):
     st.session_state["_trigger_rerun"] = False
     st.rerun()
+
